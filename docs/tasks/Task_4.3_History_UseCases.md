@@ -1,9 +1,9 @@
-# Tarea: [Historia 3 - Dominio] Casos de Uso Historial
+# Task: [Story 3 - Domain] History Use Cases
 
-**Fase**: Fase 4 - Historia 3
+**Phase**: Phase 4 - Story 3
 
-## Descripción
-Crear `SaveAlertUseCase.kt`, `GetAlertHistoryUseCase.kt` y `ClearHistoryUseCase.kt` en `feature/history/domain/`.
+## Description
+Create `SaveAlertUseCase.kt`, `GetAlertHistoryUseCase.kt`, and `ClearHistoryUseCase.kt` in `feature/history/domain/`.
 
-## Criterios de Aceptación
-- [ ] Exponen llamadas al DAO utilizando Flow para la lectura en tiempo real.
+## Acceptance Criteria
+- [ ] They expose DAO calls using `Flow` for real-time reads.

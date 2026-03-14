@@ -1,10 +1,10 @@
-# Tarea: [Historia 2 - Dominio] SendAlertEmailUseCase
+# Task: [Story 2 - Domain] SendAlertEmailUseCase
 
-**Fase**: Fase 3 - Historia 2 (MVP)
+**Phase**: Phase 3 - Story 2 (MVP)
 
-## Descripción
-Crear el caso de uso `SendAlertEmailUseCase.kt` en `feature/alerting/domain/` que estructure el correo (incluyendo la categoría y miniatura) y llame a Resend.
+## Description
+Create `SendAlertEmailUseCase.kt` in `feature/alerting/domain/` so it builds the email content, including the category and thumbnail, and calls Resend.
 
-## Criterios de Aceptación
-- [ ] Genera un template HTML básico con los datos de la alerta.
-- [ ] Maneja errores de envío de forma silenciosa (para no crashear el background).
+## Acceptance Criteria
+- [ ] It generates a basic HTML template with the alert data.
+- [ ] It handles send errors silently so the background flow does not crash.

@@ -1,9 +1,9 @@
-# Tarea: [Historia 3 - UI] HistoryViewModel
+# Task: [Story 3 - UI] HistoryViewModel
 
-**Fase**: Fase 4 - Historia 3
+**Phase**: Phase 4 - Story 3
 
-## Descripción
-Implementar el `HistoryViewModel.kt` en `feature/history/presentation/` que exponga el flujo (`StateFlow`) del historial y maneje el borrado.
+## Description
+Implement `HistoryViewModel.kt` in `feature/history/presentation/` so it exposes the history flow as `StateFlow` and handles clearing actions.
 
-## Criterios de Aceptación
-- [ ] Mapea correctamente la lista de `AlertEntity` a un estado de UI.
+## Acceptance Criteria
+- [ ] It maps the `AlertEntity` list correctly into UI state.

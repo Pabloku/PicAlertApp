@@ -1,10 +1,10 @@
-# Tarea: [Setup - DI] AppModule
+# Task: [Setup - DI] AppModule
 
-**Fase**: Fase 1 - Setup / Fundacional
+**Phase**: Phase 1 - Setup / Foundation
 
-## Descripción
-Crear el módulo de inyección genérico en `core/di/AppModule.kt` para proveer el contexto de la aplicación.
+## Description
+Create the generic injection module in `core/di/AppModule.kt` to provide the application context.
 
-## Criterios de Aceptación
-- [ ] El módulo está anotado con `@Module` y `@InstallIn(SingletonComponent::class)`.
-- [ ] Provee el `@ApplicationContext` correctamente.
+## Acceptance Criteria
+- [ ] The module is annotated with `@Module` and `@InstallIn(SingletonComponent::class)`.
+- [ ] It provides `@ApplicationContext` correctly.

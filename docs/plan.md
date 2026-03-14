@@ -1,44 +1,44 @@
-# Plan: Monitorización Parental de Imágenes en WhatsApp mediante IA
+# Plan: AI-Based Parental Monitoring of WhatsApp Images
 
-**Spec de Referencia:** Spec de Monitorización Parental de WhatsApp MVP
+**Reference Spec:** WhatsApp Parental Monitoring MVP Spec
 
-## Contexto Técnico (Stack)
-- **Lenguaje/Framework:** Kotlin, Android, Jetpack Compose para UI, Dagger Hilt para Inyección de Dependencias.
-- **Base de Datos:** Room (SQLite).
-- **Consideraciones:** Arquitectura monolítica estructurada por funcionalidades (Package by Feature) aplicando Clean Architecture internamente en cada feature. El procesamiento se realizará en segundo plano mediante un Foreground Service.
+## Technical Context (Stack)
+- **Language/Framework:** Kotlin, Android, Jetpack Compose for UI, and Dagger Hilt for dependency injection.
+- **Database:** Room (SQLite).
+- **Considerations:** A modular monolith structured by feature (Package by Feature), applying Clean Architecture inside each feature. Processing will run in the background through a Foreground Service.
 
-## Decisiones de Diseño Técnico
-- **[Monitorización de Archivos]:** Se implementará un Foreground Service que registre un ContentObserver sobre el almacenamiento para detectar de forma fiable cuando una nueva imagen entra en las carpetas de WhatsApp.
-- **[Integración con OpenAI API]:** Se utilizará Retrofit2 para consumir explícitamente la API de Moderation de OpenAI (https://developers.openai.com/api/docs/guides/moderation/). Las imágenes se codificarán en Base64 o se enviarán adecuadamente según la documentación, inyectando el API Key mediante el BuildConfig.
-- **[Envío de Correos Electrónicos]:** Se integrará la API REST de Resend (plan gratuito) vía Retrofit para enviar las alertas directamente desde la aplicación sin necesidad de levantar un backend propio.
-- **[Almacenamiento Local con Room]:** Se creará una base de datos Room que persistirá las alertas de forma local para alimentar la vista del historial, garantizando que el usuario pueda vaciarla en cualquier momento.
-- **[Estructura Package by Feature]:** El proyecto se dividirá en módulos lógicos (features: Onboarding, Monitoring, Alerting, History). Cada feature contendrá sus propias capas data, domain y presentation para maximizar la cohesión.
+## Technical Design Decisions
+- **[File Monitoring]:** A Foreground Service will register a ContentObserver on storage to reliably detect when a new image enters WhatsApp folders.
+- **[OpenAI API Integration]:** Retrofit2 will be used to consume the OpenAI Moderation API explicitly (https://developers.openai.com/api/docs/guides/moderation/). Images will be encoded as Base64 or sent in the format required by the documentation, with the API key injected through BuildConfig.
+- **[Email Delivery]:** The Resend REST API free tier will be integrated through Retrofit to send alerts directly from the app without introducing a custom backend.
+- **[Local Storage with Room]:** A Room database will persist alerts locally to power the history view, while allowing the user to clear it at any time.
+- **[Package by Feature Structure]:** The project will be split into logical feature areas: Onboarding, Monitoring, Alerting, and History. Each feature will contain its own data, domain, and presentation layers to maximize cohesion.
 
-## Estructura de Archivos Propuesta
+## Proposed File Structure
 ```text
 /app/src/main/java/com/pabloku/picalertsapp
 │
-├── /core <-- (Código compartido en toda la app)
-│   ├── /di (Módulos Hilt: AppModule, NetworkModule)
-│   ├── /network (Configuración base de Retrofit y OkHttp)
-│   └── /database (AppDatabase genérica)
+├── /core <-- (Shared code across the app)
+│   ├── /di (Hilt modules: AppModule, NetworkModule)
+│   ├── /network (Base Retrofit and OkHttp configuration)
+│   └── /database (Generic AppDatabase)
 │
-├── /feature/onboarding <-- FEATURE 1: Gestión inicial
-│   ├── /data (Datastore o SharedPreferences para el email)
+├── /feature/onboarding <-- FEATURE 1: Initial setup
+│   ├── /data (DataStore or SharedPreferences for the email)
 │   ├── /domain (SaveTutorEmailUseCase, GetTutorEmailUseCase)
 │   └── /presentation (OnboardingScreen.kt, OnboardingViewModel.kt)
 │
-├── /feature/monitoring <-- FEATURE 2: Detección y Análisis IA
+├── /feature/monitoring <-- FEATURE 2: Detection and AI analysis
 │   ├── /data
-│   │   └── /remote (OpenAiApi.kt para developers.openai.com/..., Dtos)
+│   │   └── /remote (OpenAiApi.kt for developers.openai.com/... and DTOs)
 │   ├── /domain (AnalyzeImageUseCase.kt)
-│   └── /presentation (WhatsappMonitorService.kt con ContentObserver)
+│   └── /presentation (WhatsappMonitorService.kt with ContentObserver)
 │
-├── /feature/alerting <-- FEATURE 3: Notificación por Email
-│   ├── /data (ResendApi.kt para la API de correos)
+├── /feature/alerting <-- FEATURE 3: Email notification
+│   ├── /data (ResendApi.kt for the email API)
 │   └── /domain (SendAlertEmailUseCase.kt)
 │
-└── /feature/history <-- FEATURE 4: Registro y visualización
+└── /feature/history <-- FEATURE 4: Record and display
     ├── /data (AlertDao.kt, AlertEntity.kt)
     ├── /domain (GetAlertHistoryUseCase.kt, ClearHistoryUseCase.kt)
     └── /presentation (HistoryScreen.kt, HistoryViewModel.kt)

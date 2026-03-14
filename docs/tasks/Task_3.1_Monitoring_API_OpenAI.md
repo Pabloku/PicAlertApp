@@ -1,10 +1,10 @@
-# Tarea: [Historia 2 - Datos] OpenAiApi
+# Task: [Story 2 - Data] OpenAiApi
 
-**Fase**: Fase 3 - Historia 2 (MVP)
+**Phase**: Phase 3 - Story 2 (MVP)
 
-## Descripción
-Crear la interfaz de Retrofit `OpenAiApi.kt` y sus DTOs en `feature/monitoring/data/remote/` basándose en la API de Moderation.
+## Description
+Create the Retrofit interface `OpenAiApi.kt` and its DTOs in `feature/monitoring/data/remote/` based on the Moderation API.
 
-## Criterios de Aceptación
-- [ ] Endpoint `POST /v1/moderations` mapeado correctamente.
-- [ ] DTOs de Request y Response estructurados según la documentación.
+## Acceptance Criteria
+- [ ] The `POST /v1/moderations` endpoint is mapped correctly.
+- [ ] The request and response DTOs are structured according to the documentation.

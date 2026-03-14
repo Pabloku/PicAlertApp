@@ -1,10 +1,10 @@
-# Tarea: [Historia 2 - Servicio] Foreground Service
+# Task: [Story 2 - Service] Foreground Service
 
-**Fase**: Fase 3 - Historia 2 (MVP)
+**Phase**: Phase 3 - Story 2 (MVP)
 
-## Descripción
-Configurar el `WhatsappMonitorService.kt` (Foreground Service) en `feature/monitoring/presentation/` y declararlo en el `AndroidManifest.xml` con permisos.
+## Description
+Configure `WhatsappMonitorService.kt` as a Foreground Service in `feature/monitoring/presentation/` and declare it in `AndroidManifest.xml` with the required permissions.
 
-## Criterios de Aceptación
-- [ ] Permisos `READ_EXTERNAL_STORAGE` / `READ_MEDIA_IMAGES` y `FOREGROUND_SERVICE`.
-- [ ] Muestra una notificación persistente obligatoria en Android.
+## Acceptance Criteria
+- [ ] Permissions `READ_EXTERNAL_STORAGE` or `READ_MEDIA_IMAGES`, and `FOREGROUND_SERVICE` are declared.
+- [ ] It shows the required persistent Android notification.

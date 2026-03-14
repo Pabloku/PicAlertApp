@@ -1,10 +1,10 @@
-# Tarea: [Historia 1 - UI] OnboardingViewModel
+# Task: [Story 1 - UI] OnboardingViewModel
 
-**Fase**: Fase 2 - Historia 1 (MVP)
+**Phase**: Phase 2 - Story 1 (MVP)
 
-## Descripción
-Implementar el `OnboardingViewModel.kt` en `feature/onboarding/presentation/` que inyecte los casos de uso para validar y guardar el email.
+## Description
+Implement `OnboardingViewModel.kt` in `feature/onboarding/presentation/` and inject the use cases to validate and store the email.
 
-## Criterios de Aceptación
-- [ ] Maneja el estado de la UI (email válido/inválido).
-- [ ] Llama a `SaveTutorEmailUseCase` al confirmar.
+## Acceptance Criteria
+- [ ] It handles UI state, including valid and invalid email states.
+- [ ] It calls `SaveTutorEmailUseCase` on confirmation.

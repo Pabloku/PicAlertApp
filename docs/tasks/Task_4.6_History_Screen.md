@@ -1,10 +1,10 @@
-# Tarea: [Historia 3 - UI] HistoryScreen
+# Task: [Story 3 - UI] HistoryScreen
 
-**Fase**: Fase 4 - Historia 3
+**Phase**: Phase 4 - Story 3
 
-## Descripción
-Diseñar la pantalla principal `HistoryScreen.kt` en `feature/history/presentation/` mostrando una lista con las alertas y un botón "Vaciar Historial".
+## Description
+Design the main `HistoryScreen.kt` in `feature/history/presentation/`, showing a list of alerts and a "Clear History" button.
 
-## Criterios de Aceptación
-- [ ] Interfaz limpia usando Jetpack Compose (`LazyColumn`).
-- [ ] Muestra un mensaje amigable si el historial está vacío.
+## Acceptance Criteria
+- [ ] Clean interface using Jetpack Compose and `LazyColumn`.
+- [ ] Shows a friendly empty-state message when the history is empty.

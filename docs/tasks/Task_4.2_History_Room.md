@@ -1,9 +1,9 @@
-# Tarea: [Historia 3 - Datos] Registro en BBDD
+# Task: [Story 3 - Data] Database Registration
 
-**Fase**: Fase 4 - Historia 3
+**Phase**: Phase 4 - Story 3
 
-## Descripción
-Registrar el DAO en la `AppDatabase.kt` creada en la Fase 1.
+## Description
+Register the DAO in the `AppDatabase.kt` created during Phase 1.
 
-## Criterios de Aceptación
-- [ ] El DAO es proveído exitosamente por Hilt.
+## Acceptance Criteria
+- [ ] The DAO is provided successfully by Hilt.

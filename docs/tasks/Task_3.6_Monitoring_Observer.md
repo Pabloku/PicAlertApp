@@ -1,10 +1,10 @@
-# Tarea: [Historia 2 - Servicio] ContentObserver
+# Task: [Story 2 - Service] ContentObserver
 
-**Fase**: Fase 3 - Historia 2 (MVP)
+**Phase**: Phase 3 - Story 2 (MVP)
 
-## Descripción
-Implementar un `ContentObserver` dentro del `WhatsappMonitorService.kt` que vigile las URIs de la galería y filtre por las rutas de almacenamiento de WhatsApp.
+## Description
+Implement a `ContentObserver` inside `WhatsappMonitorService.kt` that watches gallery URIs and filters by WhatsApp storage paths.
 
-## Criterios de Aceptación
-- [ ] Se dispara solo cuando se inserta una nueva imagen.
-- [ ] Filtra correctamente los paths de `/WhatsApp/Media/WhatsApp Images/`.
+## Acceptance Criteria
+- [ ] It triggers only when a new image is inserted.
+- [ ] It filters the `/WhatsApp/Media/WhatsApp Images/` paths correctly.

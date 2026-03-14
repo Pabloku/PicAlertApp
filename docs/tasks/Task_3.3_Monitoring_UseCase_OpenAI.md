@@ -1,10 +1,10 @@
-# Tarea: [Historia 2 - Dominio] AnalyzeImageUseCase
+# Task: [Story 2 - Domain] AnalyzeImageUseCase
 
-**Fase**: Fase 3 - Historia 2 (MVP)
+**Phase**: Phase 3 - Story 2 (MVP)
 
-## Descripción
-Crear el caso de uso `AnalyzeImageUseCase.kt` en `feature/monitoring/domain/` que codifique la imagen local y llame al repositorio de OpenAI.
+## Description
+Create `AnalyzeImageUseCase.kt` in `feature/monitoring/domain/` so it encodes the local image and calls the OpenAI repository.
 
-## Criterios de Aceptación
-- [ ] Transforma el archivo local a formato compatible.
-- [ ] Retorna un Result con las categorías detectadas o un estado de OK.
+## Acceptance Criteria
+- [ ] It transforms the local file into a compatible format.
+- [ ] It returns a `Result` with detected categories or an OK state.

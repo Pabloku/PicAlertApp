@@ -1,9 +1,9 @@
-# Tarea: [Historia 3 - Datos] Entidad y DAO
+# Task: [Story 3 - Data] Entity and DAO
 
-**Fase**: Fase 4 - Historia 3
+**Phase**: Phase 4 - Story 3
 
-## Descripción
-Crear la entidad `AlertEntity.kt` (campos: id, imageUri, category, timestamp) y el `AlertDao.kt` en `feature/history/data/`.
+## Description
+Create `AlertEntity.kt` with fields `id`, `imageUri`, `category`, and `timestamp`, along with `AlertDao.kt` in `feature/history/data/`.
 
-## Criterios de Aceptación
-- [ ] Definición correcta con anotaciones de Room (`@Entity`, `@Dao`, etc.).
+## Acceptance Criteria
+- [ ] Correct Room annotation usage such as `@Entity` and `@Dao`.

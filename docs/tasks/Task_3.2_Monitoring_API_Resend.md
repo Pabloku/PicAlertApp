@@ -1,10 +1,10 @@
-# Tarea: [Historia 2 - Datos] ResendApi
+# Task: [Story 2 - Data] ResendApi
 
-**Fase**: Fase 3 - Historia 2 (MVP)
+**Phase**: Phase 3 - Story 2 (MVP)
 
-## Descripción
-Crear la interfaz de Retrofit `ResendApi.kt` y sus DTOs en `feature/alerting/data/` para comunicarse con la API de Resend.
+## Description
+Create the Retrofit interface `ResendApi.kt` and its DTOs in `feature/alerting/data/` to communicate with the Resend API.
 
-## Criterios de Aceptación
-- [ ] Endpoint `POST /emails` mapeado correctamente.
-- [ ] Permite enviar el 'to', 'from', 'subject' y contenido HTML.
+## Acceptance Criteria
+- [ ] The `POST /emails` endpoint is mapped correctly.
+- [ ] It can send `to`, `from`, `subject`, and HTML content.

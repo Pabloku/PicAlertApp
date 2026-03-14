@@ -1,44 +1,44 @@
-# Spec: Monitorización Parental de Imágenes en WhatsApp mediante IA
+# Spec: AI-Based Parental Monitoring of WhatsApp Images
 
-## Descripción General
-Una aplicación de Android diseñada como herramienta de control parental que monitoriza automáticamente las imágenes que se envían y reciben a través de las carpetas de WhatsApp (chats privados y grupales). Utiliza la API de Moderation de OpenAI configurada con alta sensibilidad para analizar el contenido visual. Si detecta material inapropiado (violencia, contenido sexual, etc.), la app no bloquea la imagen, pero envía inmediatamente una alerta por correo electrónico al tutor con los detalles del incidente, basándose puramente en el análisis del archivo.
+## Overview
+An Android application designed as a parental control tool that automatically monitors the images sent and received through WhatsApp folders, including private and group chats. It uses the OpenAI Moderation API with high sensitivity to analyze visual content. If inappropriate material is detected, such as violence or sexual content, the app does not block the image, but immediately sends an email alert to the guardian with the incident details based purely on file analysis.
 
-## Historias de Usuario (El "Qué")
+## User Stories (The "What")
 
-### Historia 1: Onboarding y configuración de alertas (Prioridad: 1 - MVP)
-**Como** padre o tutor, **Quiero** introducir mi dirección de correo electrónico al abrir la app por primera vez, **Para** poder recibir las alertas de seguridad en mi buzón personal.
+### Story 1: Onboarding and alert setup (Priority: 1 - MVP)
+**As a** parent or guardian, **I want** to enter my email address the first time I open the app, **so that** I can receive safety alerts in my personal inbox.
 
-**Criterios de Aceptación (Cómo sabremos que funciona):**
-- Dado que el usuario acaba de instalar la app y la abre por primera vez, Cuando se muestra la pantalla de inicio, Entonces el sistema solicita un email válido sin pedir creación de cuenta o contraseña.
-- Dado que el usuario ha introducido su email y completado el onboarding, Cuando vuelve a abrir la app en el futuro, Entonces accede directamente a la pantalla principal sin requerir autenticación.
+**Acceptance Criteria (How we know it works):**
+- Given that the user has just installed the app and opens it for the first time, when the start screen is shown, then the system requests a valid email without asking for account creation or a password.
+- Given that the user has entered their email and completed onboarding, when they open the app again in the future, then they go directly to the main screen without authentication.
 
-### Historia 2: Detección y alerta en tiempo real (Prioridad: 1 - MVP)
-**Como** padre o tutor, **Quiero** recibir un email automático con los detalles de una imagen sospechosa detectada en el WhatsApp de mi hijo, **Para** estar informado inmediatamente sobre su exposición a contenido peligroso.
+### Story 2: Real-time detection and alerting (Priority: 1 - MVP)
+**As a** parent or guardian, **I want** to receive an automatic email with the details of a suspicious image detected in my child's WhatsApp, **so that** I am informed immediately about possible exposure to dangerous content.
 
-**Criterios de Aceptación:**
-- Dado que la monitorización en segundo plano está activa, Cuando se guarda una imagen nueva en las carpetas de WhatsApp y la API de OpenAI la clasifica como peligrosa, Entonces el sistema envía en tiempo real un correo electrónico al padre.
-- Dado que se va a enviar la alerta por email, Cuando se genera el mensaje, Entonces este debe incluir obligatoriamente: una miniatura de la imagen, la categoría detectada (ej. violencia) y la fecha/hora exacta en la que se detectó el archivo en el dispositivo.
+**Acceptance Criteria:**
+- Given that background monitoring is active, when a new image is saved in WhatsApp folders and the OpenAI API classifies it as dangerous, then the system sends an email to the parent in real time.
+- Given that an alert email is about to be sent, when the message is generated, then it must include: an image thumbnail, the detected category such as violence, and the exact date and time when the file was detected on the device.
 
-### Historia 3: Gestión del historial local (Prioridad: 2)
-**Como** padre o tutor que revisa el dispositivo físicamente, **Quiero** poder ver un registro de las alertas generadas y tener la opción de vaciarlo, **Para** mantener la aplicación limpia y organizar las incidencias ya revisadas.
+### Story 3: Local history management (Priority: 2)
+**As a** parent or guardian reviewing the device in person, **I want** to see a record of generated alerts and have the option to clear it, **so that** I can keep the application clean and organize incidents that have already been reviewed.
 
-**Criterios de Aceptación:**
-- Dado que se han detectado imágenes peligrosas en el pasado, Cuando el usuario entra a la pantalla principal de la app, Entonces puede ver un listado básico con el historial de estas alertas.
-- Dado que el usuario está viendo el historial, Cuando pulsa el botón de "Eliminar alertas", Entonces se borra todo el registro local del dispositivo.
+**Acceptance Criteria:**
+- Given that dangerous images have been detected in the past, when the user opens the app main screen, then they can see a basic list with the history of those alerts.
+- Given that the user is viewing the history, when they tap the "Delete alerts" button, then the full local record is deleted from the device.
 
-## Casos Borde y Escenarios de Error
-- **¿Qué pasa si no hay conexión a internet cuando llega/se envía la imagen?** Al ser un MVP, la imagen no se procesará ni se encolará para más tarde; se considerará que no se puede analizar y no se enviará alerta.
-- **¿Qué pasa si la API de OpenAI falla, devuelve un error o se excede el límite de peticiones?** El sistema aplicará un fallback de seguridad pasiva: considerará la imagen como "segura" (OK) para no generar falsas alarmas ni bloquear el flujo.
-- **¿Qué pasa si se reciben vídeos, GIFs animados o stickers?** El sistema debe ignorarlos completamente, limitándose a procesar extensiones de imagen estáticas (JPG, PNG, etc.).
-- **¿Qué pasa si el menor decide desinstalar la app o forzar su cierre?** En esta primera versión no existe protección contra desinstalación o cierres. La app simplemente dejará de monitorizar.
+## Edge Cases and Error Scenarios
+- **What happens if there is no internet connection when the image arrives or is sent?** Since this is an MVP, the image will not be processed or queued for later; it will be considered not analyzable and no alert will be sent.
+- **What happens if the OpenAI API fails, returns an error, or exceeds the rate limit?** The system applies a passive safety fallback and treats the image as safe (OK) to avoid false alarms or blocking the flow.
+- **What happens if videos, animated GIFs, or stickers are received?** The system must ignore them completely and only process static image extensions such as JPG and PNG.
+- **What happens if the child uninstalls the app or force-stops it?** In this first version there is no uninstall or force-stop protection. The app simply stops monitoring.
 
-## Requisitos Clave (Must-Haves)
-- El sistema **DEBE** monitorizar exclusivamente las rutas de almacenamiento que usa WhatsApp para guardar imágenes.
-- El sistema **DEBE** enviar los datos a la API de OpenAI para su análisis asumiendo una sensibilidad alta en la detección de las diferentes categorías (todas activas por defecto).
-- El sistema **DEBE** tener una UI transparente en el dispositivo, de manera que el menor sepa que la app está instalada.
-- El sistema **NO DEBE** intentar identificar al remitente o destinatario de la imagen, limitándose a reportar la existencia del archivo en el dispositivo.
-- El sistema **NO DEBE** interferir, alterar, bloquear ni borrar la imagen original de la galería del teléfono (Read-Only).
+## Key Requirements (Must-Haves)
+- The system **MUST** monitor only the storage paths used by WhatsApp to save images.
+- The system **MUST** send data to the OpenAI API for analysis using high sensitivity across the supported categories, with all categories enabled by default.
+- The system **MUST** have a transparent UI presence on the device so the child knows the app is installed.
+- The system **MUST NOT** try to identify the sender or recipient of the image, and must limit itself to reporting that the file exists on the device.
+- The system **MUST NOT** interfere with, alter, block, or delete the original gallery image. Operation is read-only.
 
-## Criterios de Éxito (El "Por Qué")
-- Sabremos que esto es un éxito si el sistema es capaz de detectar una imagen, enviarla a la API, procesar la respuesta y mandar el email de alerta en menos de 10-15 segundos desde que la imagen entra al dispositivo (suponiendo una red estable).
-- El objetivo de negocio es proveer a los tutores de una herramienta funcional, rápida de desarrollar, que les otorgue visibilidad del entorno digital visual del menor de forma no intrusiva.
+## Success Criteria (The "Why")
+- We will consider this a success if the system can detect an image, send it to the API, process the response, and send the alert email within 10 to 15 seconds after the image reaches the device, assuming a stable network.
+- The business goal is to provide guardians with a functional and fast-to-build tool that gives visibility into the child's visual digital environment in a non-intrusive way.

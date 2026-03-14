@@ -1,10 +1,10 @@
-# Tarea: [Setup - UI] MainActivity y NavHost
+# Task: [Setup - UI] MainActivity and NavHost
 
-**Fase**: Fase 1 - Setup / Fundacional
+**Phase**: Phase 1 - Setup / Foundation
 
-## Descripción
-Configurar la actividad principal `MainActivity.kt` con un `NavHost` de Compose básico para manejar la navegación entre pantallas.
+## Description
+Configure the main activity `MainActivity.kt` with a basic Compose `NavHost` to handle screen navigation.
 
-## Criterios de Aceptación
-- [ ] `MainActivity` anotada con `@AndroidEntryPoint`.
-- [ ] `NavHost` configurado con rutas básicas para pruebas.
+## Acceptance Criteria
+- [ ] `MainActivity` is annotated with `@AndroidEntryPoint`.
+- [ ] `NavHost` is configured with basic routes for testing.

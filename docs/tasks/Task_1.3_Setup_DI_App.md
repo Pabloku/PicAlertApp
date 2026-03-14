@@ -1,10 +1,10 @@
-# Tarea: [Setup - DI] Clase Application
+# Task: [Setup - DI] Application Class
 
-**Fase**: Fase 1 - Setup / Fundacional
+**Phase**: Phase 1 - Setup / Foundation
 
-## Descripción
-Crear la clase `ParentalApp.kt` heredando de `Application`, anotarla con `@HiltAndroidApp` y declararla en el `AndroidManifest.xml`.
+## Description
+Create the `ParentalApp.kt` class extending `Application`, annotate it with `@HiltAndroidApp`, and declare it in `AndroidManifest.xml`.
 
-## Criterios de Aceptación
-- [ ] La app compila y arranca sin crashear.
-- [ ] El manifest incluye `android:name=".ParentalApp"`.
+## Acceptance Criteria
+- [ ] The app compiles and starts without crashing.
+- [ ] The manifest includes `android:name=".ParentalApp"`.
