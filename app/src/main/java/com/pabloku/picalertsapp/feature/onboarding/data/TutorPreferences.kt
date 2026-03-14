@@ -19,13 +19,13 @@ import kotlinx.coroutines.flow.map
 @Singleton
 class TutorPreferences @Inject constructor(
     @param:ApplicationContext private val context: Context
-) {
+) : TutorEmailLocalDataSource {
 
     private val dataStore: DataStore<Preferences> = PreferenceDataStoreFactory.create(
         produceFile = { context.preferencesDataStoreFile(DATASTORE_NAME) }
     )
 
-    val tutorEmail: Flow<String?> = dataStore.data
+    private val tutorEmail: Flow<String?> = dataStore.data
         .catch { exception ->
             if (exception is IOException) {
                 emit(emptyPreferences())
@@ -37,7 +37,9 @@ class TutorPreferences @Inject constructor(
             preferences[TUTOR_EMAIL_KEY]
         }
 
-    suspend fun saveTutorEmail(email: String) {
+    override fun getTutorEmail(): Flow<String?> = tutorEmail
+
+    override suspend fun saveTutorEmail(email: String) {
         dataStore.edit { preferences ->
             preferences[TUTOR_EMAIL_KEY] = email
         }
