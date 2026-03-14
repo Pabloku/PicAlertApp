@@ -24,6 +24,7 @@ Prefer small, explicit files within feature packages. Keep Compose UI stateless 
 Use JUnit 4 for local tests and AndroidX test tooling for instrumentation tests. Name test files after the subject under test, such as `SaveTutorEmailUseCaseTest`, and name test methods with behavior-focused `when_then` or `expectedResult` phrasing.
 
 Add unit tests for new domain logic and repository behavior. Add instrumentation or Compose UI tests when changing navigation, services, or user-visible flows.
+After implementing any task that affects the Android app, verify not only that it compiles but also that the debug app installs and launches on an emulator or device without crashing. Do not consider the task complete until this runtime check passes, unless the user explicitly waives it.
 
 ## Commit & Pull Request Guidelines
 Recent history uses uppercase prefixes like `CHORE: add ...`. Follow `TYPE: short imperative summary`, where `TYPE` is typically `FEAT`, `FIX`, `CHORE`, or `DOCS`.
