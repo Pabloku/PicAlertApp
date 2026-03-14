@@ -12,7 +12,6 @@ import dagger.hilt.components.SingletonComponent
 object AppModule {
 
     @Provides
-    @ApplicationContext
     fun provideApplicationContext(
         @ApplicationContext context: Context
     ): Context = context
