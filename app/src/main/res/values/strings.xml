@@ -9,7 +9,13 @@
     <string name="onboarding_primary_action">Start Monitoring</string>
     <string name="onboarding_security_caption">AI detection</string>
     <string name="onboarding_disclaimer">By clicking above, you agree to our Terms and Privacy Policy regarding child safety.</string>
-    <string name="history_title">Monitoring active</string>
+    <string name="history_screen_title">Alert History</string>
+    <string name="history_clear_action">Clear history</string>
+    <string name="history_monitoring_active_title">Monitoring is active</string>
+    <string name="history_monitoring_active_body">Running in the background and protecting your chats.</string>
+    <string name="history_recent_notifications">RECENT NOTIFICATIONS</string>
+    <string name="history_empty_title">No alerts yet</string>
+    <string name="history_empty_body">When Pics Alert detects risky WhatsApp media, the alert will appear here.</string>
     <string name="monitoring_notification_channel_name">Monitoring service</string>
     <string name="monitoring_notification_channel_description">Persistent notification for WhatsApp image monitoring.</string>
     <string name="monitoring_notification_title">Pics Alert is monitoring WhatsApp</string>

@@ -127,6 +127,7 @@ class WhatsappMonitorService : Service() {
                 ?.let { absolutePath ->
                     imageProcessingCoordinator.processNewImage(
                         imageFile = File(absolutePath),
+                        detectedAtEpochMillis = record.dateAddedEpochSeconds * 1000,
                         detectedAt = record.formattedDetectedAt()
                     )
                 }

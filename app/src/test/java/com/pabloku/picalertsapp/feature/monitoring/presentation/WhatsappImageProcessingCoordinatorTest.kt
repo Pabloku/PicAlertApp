@@ -2,6 +2,7 @@ package com.pabloku.picalertsapp.feature.monitoring.presentation
 
 import com.pabloku.picalertsapp.feature.alerting.domain.AlertEmailPayload
 import com.pabloku.picalertsapp.feature.alerting.domain.SendAlertEmailUseCase
+import com.pabloku.picalertsapp.feature.history.domain.SaveAlertUseCase
 import com.pabloku.picalertsapp.feature.monitoring.domain.AnalyzeImageResult
 import com.pabloku.picalertsapp.feature.monitoring.domain.AnalyzeImageUseCase
 import com.pabloku.picalertsapp.feature.onboarding.domain.GetTutorEmailUseCase
@@ -27,6 +28,9 @@ class WhatsappImageProcessingCoordinatorTest {
     @MockK
     lateinit var sendAlertEmailUseCase: SendAlertEmailUseCase
 
+    @MockK
+    lateinit var saveAlertUseCase: SaveAlertUseCase
+
     private lateinit var coordinator: WhatsappImageProcessingCoordinator
 
     @Before
@@ -35,7 +39,8 @@ class WhatsappImageProcessingCoordinatorTest {
         coordinator = WhatsappImageProcessingCoordinator(
             analyzeImageUseCase = analyzeImageUseCase,
             getTutorEmailUseCase = getTutorEmailUseCase,
-            sendAlertEmailUseCase = sendAlertEmailUseCase
+            sendAlertEmailUseCase = sendAlertEmailUseCase,
+            saveAlertUseCase = saveAlertUseCase
         )
     }
 
@@ -44,9 +49,10 @@ class WhatsappImageProcessingCoordinatorTest {
         val imageFile = createTempImageFile()
         coEvery { analyzeImageUseCase(imageFile) } returns Result.success(AnalyzeImageResult.Ok)
 
-        coordinator.processNewImage(imageFile, "2026-03-15 14:50:00")
+        coordinator.processNewImage(imageFile, 1_742_050_000_000, "2026-03-15 14:50:00")
 
         coVerify(exactly = 0) { sendAlertEmailUseCase(any()) }
+        coVerify(exactly = 0) { saveAlertUseCase(any(), any(), any()) }
     }
 
     @Test
@@ -55,9 +61,10 @@ class WhatsappImageProcessingCoordinatorTest {
         coEvery { analyzeImageUseCase(imageFile) } returns
             Result.success(AnalyzeImageResult.Flagged(listOf("violence", "sexual")))
         every { getTutorEmailUseCase() } returns flowOf("guardian@example.com")
-        coEvery { sendAlertEmailUseCase(any()) } returns Unit
+        coEvery { sendAlertEmailUseCase(any()) } returns true
+        coEvery { saveAlertUseCase(any(), any(), any()) } returns Unit
 
-        coordinator.processNewImage(imageFile, "2026-03-15 14:50:00")
+        coordinator.processNewImage(imageFile, 1_742_050_000_000, "2026-03-15 14:50:00")
 
         coVerify(exactly = 1) {
             sendAlertEmailUseCase(
@@ -66,6 +73,13 @@ class WhatsappImageProcessingCoordinatorTest {
                         payload.detectedCategory == "violence, sexual" &&
                         payload.imageFile == imageFile
                 }
+            )
+        }
+        coVerify(exactly = 1) {
+            saveAlertUseCase(
+                imageUri = imageFile.absolutePath,
+                category = "violence, sexual",
+                timestamp = 1_742_050_000_000
             )
         }
     }
@@ -77,9 +91,10 @@ class WhatsappImageProcessingCoordinatorTest {
             Result.success(AnalyzeImageResult.Flagged(listOf("violence")))
         every { getTutorEmailUseCase() } returns flowOf(null)
 
-        coordinator.processNewImage(imageFile, "2026-03-15 14:50:00")
+        coordinator.processNewImage(imageFile, 1_742_050_000_000, "2026-03-15 14:50:00")
 
         coVerify(exactly = 0) { sendAlertEmailUseCase(any()) }
+        coVerify(exactly = 0) { saveAlertUseCase(any(), any(), any()) }
     }
 
     private fun createTempImageFile(): File {

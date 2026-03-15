@@ -2,6 +2,7 @@ package com.pabloku.picalertsapp.feature.monitoring.presentation
 
 import com.pabloku.picalertsapp.feature.alerting.domain.AlertEmailPayload
 import com.pabloku.picalertsapp.feature.alerting.domain.SendAlertEmailUseCase
+import com.pabloku.picalertsapp.feature.history.domain.SaveAlertUseCase
 import com.pabloku.picalertsapp.feature.monitoring.domain.AnalyzeImageResult
 import com.pabloku.picalertsapp.feature.monitoring.domain.AnalyzeImageUseCase
 import com.pabloku.picalertsapp.feature.onboarding.domain.GetTutorEmailUseCase
@@ -13,10 +14,15 @@ import timber.log.Timber
 class WhatsappImageProcessingCoordinator @Inject constructor(
     private val analyzeImageUseCase: AnalyzeImageUseCase,
     private val getTutorEmailUseCase: GetTutorEmailUseCase,
-    private val sendAlertEmailUseCase: SendAlertEmailUseCase
+    private val sendAlertEmailUseCase: SendAlertEmailUseCase,
+    private val saveAlertUseCase: SaveAlertUseCase
 ) {
 
-    suspend fun processNewImage(imageFile: File, detectedAt: String) {
+    suspend fun processNewImage(
+        imageFile: File,
+        detectedAtEpochMillis: Long,
+        detectedAt: String
+    ) {
         if (!imageFile.exists() || !imageFile.isFile) {
             return
         }
@@ -30,14 +36,22 @@ class WhatsappImageProcessingCoordinator @Inject constructor(
                 val guardianEmail = getTutorEmailUseCase().firstOrNull()?.takeIf { it.isNotBlank() }
                     ?: return
 
-                sendAlertEmailUseCase(
+                val detectedCategory = analysisResult.detectedCategories.joinToString(", ")
+                val didSend = sendAlertEmailUseCase(
                     AlertEmailPayload(
                         guardianEmail = guardianEmail,
-                        detectedCategory = analysisResult.detectedCategories.joinToString(", "),
+                        detectedCategory = detectedCategory,
                         detectedAt = detectedAt,
                         imageFile = imageFile
                     )
                 )
+                if (didSend) {
+                    saveAlertUseCase(
+                        imageUri = imageFile.absolutePath,
+                        category = detectedCategory,
+                        timestamp = detectedAtEpochMillis
+                    )
+                }
             }
         }
     }

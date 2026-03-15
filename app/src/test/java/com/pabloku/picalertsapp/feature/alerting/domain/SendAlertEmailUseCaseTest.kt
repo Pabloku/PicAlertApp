@@ -4,6 +4,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
@@ -24,8 +26,9 @@ class SendAlertEmailUseCaseTest {
             )
             coEvery { alertingRepository.sendAlertEmail(payload) } returns Result.success(Unit)
 
-            useCase(payload)
+            val result = useCase(payload)
 
+            assertTrue(result)
             coVerify(exactly = 1) { alertingRepository.sendAlertEmail(payload) }
         }
 
@@ -41,7 +44,9 @@ class SendAlertEmailUseCaseTest {
         coEvery { alertingRepository.sendAlertEmail(payload) } returns
             Result.failure(IllegalStateException("network error"))
 
-        useCase(payload)
+        val result = useCase(payload)
+
+        assertFalse(result)
     }
 
     private fun createTempImageFile(extension: String, content: ByteArray): File {

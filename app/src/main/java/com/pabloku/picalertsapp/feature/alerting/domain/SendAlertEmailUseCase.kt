@@ -6,9 +6,9 @@ class SendAlertEmailUseCase @Inject constructor(
     private val alertingRepository: AlertingRepository
 ) {
 
-    suspend operator fun invoke(payload: AlertEmailPayload) {
+    suspend operator fun invoke(payload: AlertEmailPayload): Boolean =
         runCatching {
             alertingRepository.sendAlertEmail(payload).getOrThrow()
-        }
-    }
+            true
+        }.getOrDefault(false)
 }

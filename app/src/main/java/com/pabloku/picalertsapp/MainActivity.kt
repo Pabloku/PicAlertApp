@@ -7,22 +7,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.pabloku.picalertsapp.feature.history.presentation.HistoryScreen
+import com.pabloku.picalertsapp.feature.history.presentation.HistoryViewModel
 import com.pabloku.picalertsapp.ui.theme.PicAlertsAppTheme
 import com.pabloku.picalertsapp.feature.onboarding.presentation.OnboardingScreen
 import com.pabloku.picalertsapp.feature.onboarding.presentation.OnboardingViewModel
@@ -74,6 +72,9 @@ private fun PicAlertsNavDisplay(
 
                 LaunchedEffect(uiState.isCompleted) {
                     if (uiState.isCompleted) {
+                        while (backStack.isNotEmpty()) {
+                            backStack.removeLastOrNull()
+                        }
                         backStack.add(MainRoute.History)
                         viewModel.onNavigationHandled()
                     }
@@ -87,30 +88,15 @@ private fun PicAlertsNavDisplay(
                 )
             }
             entry<MainRouteHistory> {
-                MainRouteScreen(
-                    title = stringResource(id = R.string.history_title),
-                    actionLabel = "Back to onboarding",
-                    onActionClick = dropUnlessResumed {
-                        backStack.add(MainRoute.Onboarding)
-                    },
+                val viewModel = hiltViewModel<HistoryViewModel>()
+                val uiState by viewModel.uiState.collectAsState()
+
+                HistoryScreen(
+                    uiState = uiState,
+                    onClearHistoryClick = viewModel::onClearHistoryClick,
                     modifier = modifier
                 )
             }
         }
-    )
-}
-
-@Composable
-private fun MainRouteScreen(
-    title: String,
-    actionLabel: String,
-    onActionClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Text(
-        text = "$title\n$actionLabel",
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp)
     )
 }
