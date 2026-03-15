@@ -17,12 +17,11 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://api.openai.com/"
-
     @Provides
     @Singleton
     fun provideJson(): Json = Json {
         ignoreUnknownKeys = true
+        explicitNulls = false
     }
 
     @Provides
@@ -46,11 +45,24 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(
+    @OpenAiRetrofit
+    fun provideOpenAiRetrofit(
         okHttpClient: OkHttpClient,
         json: Json
     ): Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(BuildConfig.OPENAI_BASE_URL)
+        .client(okHttpClient)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+
+    @Provides
+    @Singleton
+    @ResendRetrofit
+    fun provideResendRetrofit(
+        okHttpClient: OkHttpClient,
+        json: Json
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(BuildConfig.RESEND_BASE_URL)
         .client(okHttpClient)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
