@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.squareup.okhttp.logging)
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.timber)
     ksp(libs.androidx.room.compiler)
     ksp(libs.dagger.hilt.compiler)
     testImplementation(libs.junit)
