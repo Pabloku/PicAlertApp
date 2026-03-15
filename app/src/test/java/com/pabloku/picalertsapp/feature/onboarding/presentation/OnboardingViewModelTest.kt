@@ -116,4 +116,22 @@ class OnboardingViewModelTest {
         assertTrue(viewModel.uiState.value.isCompleted)
         coVerify(exactly = 1) { saveTutorEmailUseCase("parent@example.com") }
     }
+
+    @Test
+    fun `Given completed onboarding, when navigation is handled then reset completion flag`() = runTest {
+        every { getTutorEmailUseCase() } returns flowOf(null)
+        coEvery { saveTutorEmailUseCase("parent@example.com") } returns true
+        val viewModel = OnboardingViewModel(
+            getTutorEmailUseCase = getTutorEmailUseCase,
+            saveTutorEmailUseCase = saveTutorEmailUseCase
+        )
+        advanceUntilIdle()
+        viewModel.onEmailChanged("parent@example.com")
+        viewModel.onConfirm()
+        advanceUntilIdle()
+
+        viewModel.onNavigationHandled()
+
+        assertFalse(viewModel.uiState.value.isCompleted)
+    }
 }

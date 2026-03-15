@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">PicAlertsApp</string>
+    <string name="onboarding_top_bar_title">Pics Alert</string>
+    <string name="onboarding_heading">Protect Your Child</string>
+    <string name="onboarding_subheading">Get instant alerts if sensitive images are shared on their WhatsApp.</string>
+    <string name="onboarding_email_label">Alert Email Address</string>
+    <string name="onboarding_email_placeholder">parent@email.com</string>
+    <string name="onboarding_email_error">Please enter a valid email address.</string>
+    <string name="onboarding_primary_action">Start Monitoring</string>
+    <string name="onboarding_security_caption">AI detection</string>
+    <string name="onboarding_disclaimer">By clicking above, you agree to our Terms and Privacy Policy regarding child safety.</string>
+    <string name="history_title">Monitoring active</string>
 </resources>

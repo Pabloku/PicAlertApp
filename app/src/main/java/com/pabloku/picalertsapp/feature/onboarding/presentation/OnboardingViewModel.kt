@@ -53,4 +53,10 @@ class OnboardingViewModel @Inject constructor(
             }
         }
     }
+
+    fun onNavigationHandled() {
+        _uiState.update { currentState ->
+            currentState.copy(isCompleted = false)
+        }
+    }
 }
