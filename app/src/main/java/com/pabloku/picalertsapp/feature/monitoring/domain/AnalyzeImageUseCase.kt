@@ -15,13 +15,22 @@ class AnalyzeImageUseCase @Inject constructor(
 
         return encodedImage.fold(
             onSuccess = { dataUrl ->
-                monitoringRepository.analyzeEncodedImage(dataUrl).map { detectedCategories ->
-                    if (detectedCategories.isEmpty()) {
-                        AnalyzeImageResult.Ok
-                    } else {
-                        AnalyzeImageResult.Flagged(detectedCategories)
-                    }
-                }
+                monitoringRepository.analyzeEncodedImage(dataUrl)
+                    .fold(
+                        onSuccess = { detectedCategories ->
+                            Result.success(
+                                if (detectedCategories.isEmpty()) {
+                                    AnalyzeImageResult.Ok
+                                } else {
+                                    AnalyzeImageResult.Flagged(detectedCategories)
+                                }
+                            )
+                        },
+                        onFailure = {
+                            // MVP policy: if the moderation API fails, treat the image as safe.
+                            Result.success(AnalyzeImageResult.Ok)
+                        }
+                    )
             },
             onFailure = { throwable -> Result.failure(throwable) }
         )

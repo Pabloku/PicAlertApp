@@ -40,6 +40,18 @@ class AnalyzeImageUseCaseTest {
         )
     }
 
+    @Test
+    fun `Given repository failure, when invoke is called then return ok state as safe fallback`() = runTest {
+        val imageFile = createTempImageFile("jpg", byteArrayOf(1, 2, 3))
+        coEvery { monitoringRepository.analyzeEncodedImage(any()) } returns
+            Result.failure(IllegalStateException("api failure"))
+
+        val result = useCase(imageFile)
+
+        assertTrue(result.isSuccess)
+        assertEquals(AnalyzeImageResult.Ok, result.getOrNull())
+    }
+
     private fun createTempImageFile(extension: String, content: ByteArray): File {
         val file = File.createTempFile("test-image", ".$extension")
         file.writeBytes(content)
