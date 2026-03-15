@@ -17,12 +17,30 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.pabloku.picalertsapp.R
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import timber.log.Timber
+
+private val DETECTED_AT_FORMATTER: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        .withZone(ZoneId.systemDefault())
 
 @AndroidEntryPoint
 class WhatsappMonitorService : Service() {
 
+    @Inject
+    lateinit var imageProcessingCoordinator: WhatsappImageProcessingCoordinator
+
     private val observerHandler = Handler(Looper.getMainLooper())
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var imagesObserver: ContentObserver? = null
     private val handledImageUris = linkedSetOf<String>()
     private var monitoringStartedAtEpochSeconds: Long = 0L
@@ -39,6 +57,7 @@ class WhatsappMonitorService : Service() {
 
     override fun onDestroy() {
         unregisterImagesObserver()
+        serviceScope.cancel()
         super.onDestroy()
     }
 
@@ -86,21 +105,32 @@ class WhatsappMonitorService : Service() {
 
     private fun handleImageChange(changedUri: Uri?) {
         val imageUri = changedUri ?: return
-        val record = resolveMediaImageRecord(imageUri) ?: return
+        serviceScope.launch {
+            val record = resolveMediaImageRecord(imageUri) ?: return@launch
 
-        if (!WhatsappImageChangeEvaluator.isRelevantNewImage(
-                record = record,
-                monitoringStartedAtEpochSeconds = monitoringStartedAtEpochSeconds,
-                alreadyHandledUris = handledImageUris
-            )
-        ) {
-            return
+            if (!WhatsappImageChangeEvaluator.isRelevantNewImage(
+                    record = record,
+                    monitoringStartedAtEpochSeconds = monitoringStartedAtEpochSeconds,
+                    alreadyHandledUris = handledImageUris
+                )
+            ) {
+                return@launch
+            }
+
+            handledImageUris += imageUri.toString()
+            trimHandledUris()
+
+            Timber.d("Detected new WhatsApp image: %s", imageUri)
+
+            record.absolutePath
+                ?.takeIf { it.isNotBlank() }
+                ?.let { absolutePath ->
+                    imageProcessingCoordinator.processNewImage(
+                        imageFile = File(absolutePath),
+                        detectedAt = record.formattedDetectedAt()
+                    )
+                }
         }
-
-        handledImageUris += imageUri.toString()
-        trimHandledUris()
-
-        Timber.d("Detected new WhatsApp image: %s", imageUri)
     }
 
     private fun resolveMediaImageRecord(imageUri: Uri): MediaImageRecord? {
@@ -179,6 +209,9 @@ class WhatsappMonitorService : Service() {
             }
     }
 }
+
+private fun MediaImageRecord.formattedDetectedAt(): String =
+    DETECTED_AT_FORMATTER.format(Instant.ofEpochSecond(dateAddedEpochSeconds))
 
 private fun android.database.Cursor.getStringOrNull(columnName: String): String? {
     val index = getColumnIndex(columnName)
