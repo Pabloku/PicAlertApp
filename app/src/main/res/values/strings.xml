@@ -10,4 +10,8 @@
     <string name="onboarding_security_caption">AI detection</string>
     <string name="onboarding_disclaimer">By clicking above, you agree to our Terms and Privacy Policy regarding child safety.</string>
     <string name="history_title">Monitoring active</string>
+    <string name="monitoring_notification_channel_name">Monitoring service</string>
+    <string name="monitoring_notification_channel_description">Persistent notification for WhatsApp image monitoring.</string>
+    <string name="monitoring_notification_title">Pics Alert is monitoring WhatsApp</string>
+    <string name="monitoring_notification_text">Watching for new WhatsApp images in the background.</string>
 </resources>
