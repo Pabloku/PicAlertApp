@@ -7,12 +7,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.database.ContentObserver
-import android.net.Uri
 import android.os.IBinder
-import android.os.Handler
-import android.os.Looper
-import android.provider.MediaStore
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.pabloku.picalertsapp.R
@@ -39,132 +34,173 @@ class WhatsappMonitorService : Service() {
     @Inject
     lateinit var imageProcessingCoordinator: WhatsappImageProcessingCoordinator
 
-    private val observerHandler = Handler(Looper.getMainLooper())
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var imagesObserver: ContentObserver? = null
-    private val handledImageUris = linkedSetOf<String>()
-    private var monitoringStartedAtEpochSeconds: Long = 0L
+
+    private var receivedImagesObserver: WhatsAppDirectoryObserver? = null
+    private var sentImagesObserver: WhatsAppDirectoryObserver? = null
+
+    private val handledPaths = linkedSetOf<String>()
+
+    override fun onCreate() {
+        super.onCreate()
+        Timber.tag(TAG).i("WhatsappMonitorService created")
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Timber.tag(TAG).i(
+            "onStartCommand action=%s startId=%s flags=%s",
+            intent?.action,
+            startId,
+            flags
+        )
+
         when (intent?.action) {
             ACTION_STOP -> stopMonitoring()
             else -> startMonitoring()
         }
+
         return START_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        unregisterImagesObserver()
+        Timber.tag(TAG).i("WhatsappMonitorService destroyed")
+        stopObservers()
         serviceScope.cancel()
         super.onDestroy()
     }
 
     private fun startMonitoring() {
+        Timber.tag(TAG).i("Promoting monitoring service to foreground")
         createNotificationChannel()
+
         ServiceCompat.startForeground(
             this,
             NOTIFICATION_ID,
             buildNotification(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
         )
-        registerImagesObserverIfNeeded()
+
+        if (!AllFilesAccessHelper.isGranted()) {
+            Timber.tag(TAG).w("Cannot keep monitoring active, all files access not granted")
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return
+        }
+
+        Timber.tag(TAG).i("Starting foreground monitoring with all files access")
+        startObserversIfNeeded()
     }
 
     private fun stopMonitoring() {
-        unregisterImagesObserver()
+        Timber.tag(TAG).i("Stopping monitoring")
+        stopObservers()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
-    private fun registerImagesObserverIfNeeded() {
-        if (imagesObserver != null) {
+    private fun startObserversIfNeeded() {
+        if (receivedImagesObserver != null || sentImagesObserver != null) {
+            Timber.tag(TAG).d("Observers already started")
             return
         }
 
-        monitoringStartedAtEpochSeconds = System.currentTimeMillis() / 1000
-        imagesObserver = object : ContentObserver(observerHandler) {
-            override fun onChange(selfChange: Boolean, uri: Uri?) {
-                super.onChange(selfChange, uri)
-                handleImageChange(uri)
-            }
+        val receivedDir = WhatsAppDirectoryLocator.findReceivedImagesDir()
+        val sentDir = WhatsAppDirectoryLocator.findSentImagesDir()
+
+        Timber.tag(TAG).i(
+            "Resolved WhatsApp dirs received=%s sent=%s",
+            receivedDir?.absolutePath,
+            sentDir?.absolutePath
+        )
+
+        if (receivedDir == null && sentDir == null) {
+            Timber.tag(TAG).w("No WhatsApp image directories found")
+            return
         }
 
-        contentResolver.registerContentObserver(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            true,
-            checkNotNull(imagesObserver)
-        )
+        receivedDir?.let { dir ->
+            receivedImagesObserver = WhatsAppDirectoryObserver(
+                directory = dir,
+                observerName = "received",
+                onImageReady = { file ->
+                    handleObservedFile(file, source = "received")
+                }
+            ).also { it.start() }
+        }
+
+        sentDir?.let { dir ->
+            sentImagesObserver = WhatsAppDirectoryObserver(
+                directory = dir,
+                observerName = "sent",
+                onImageReady = { file ->
+                    handleObservedFile(file, source = "sent")
+                }
+            ).also { it.start() }
+        }
     }
 
-    private fun unregisterImagesObserver() {
-        imagesObserver?.let(contentResolver::unregisterContentObserver)
-        imagesObserver = null
+    private fun stopObservers() {
+        receivedImagesObserver?.stop()
+        sentImagesObserver?.stop()
+        receivedImagesObserver = null
+        sentImagesObserver = null
+        Timber.tag(TAG).i("All observers stopped")
     }
 
-    private fun handleImageChange(changedUri: Uri?) {
-        val imageUri = changedUri ?: return
+    private fun handleObservedFile(file: File, source: String) {
         serviceScope.launch {
-            val record = resolveMediaImageRecord(imageUri) ?: return@launch
+            val canonicalPath = runCatching { file.canonicalPath }.getOrElse { file.absolutePath }
 
-            if (!WhatsappImageChangeEvaluator.isRelevantNewImage(
-                    record = record,
-                    monitoringStartedAtEpochSeconds = monitoringStartedAtEpochSeconds,
-                    alreadyHandledUris = handledImageUris
-                )
-            ) {
+            if (!markHandled(canonicalPath)) {
+                Timber.tag(TAG).d("Ignoring already handled file=%s", canonicalPath)
                 return@launch
             }
 
-            handledImageUris += imageUri.toString()
-            trimHandledUris()
-
-            Timber.d("Detected new WhatsApp image: %s", imageUri)
-
-            record.absolutePath
-                ?.takeIf { it.isNotBlank() }
-                ?.let { absolutePath ->
-                    imageProcessingCoordinator.processNewImage(
-                        imageFile = File(absolutePath),
-                        detectedAtEpochMillis = record.dateAddedEpochSeconds * 1000,
-                        detectedAt = record.formattedDetectedAt()
-                    )
-                }
-        }
-    }
-
-    private fun resolveMediaImageRecord(imageUri: Uri): MediaImageRecord? {
-        val projection = arrayOf(
-            MediaStore.Images.Media.RELATIVE_PATH,
-            MediaStore.Images.Media.DATA,
-            MediaStore.Images.Media.DATE_ADDED
-        )
-
-        contentResolver.query(imageUri, projection, null, null, null)?.use { cursor ->
-            if (!cursor.moveToFirst()) {
-                return null
+            if (!file.exists()) {
+                Timber.tag(TAG).w("Observed file no longer exists file=%s", canonicalPath)
+                return@launch
             }
 
-            val relativePath = cursor.getStringOrNull(MediaStore.Images.Media.RELATIVE_PATH)
-            val absolutePath = cursor.getStringOrNull(MediaStore.Images.Media.DATA)
-            val dateAdded = cursor.getLongOrNull(MediaStore.Images.Media.DATE_ADDED) ?: 0L
+            if (!file.canRead()) {
+                Timber.tag(TAG).w("Observed file is not readable file=%s", canonicalPath)
+                return@launch
+            }
 
-            return MediaImageRecord(
-                contentUri = imageUri.toString(),
-                relativePath = relativePath,
-                absolutePath = absolutePath,
-                dateAddedEpochSeconds = dateAdded
+            if (file.length() <= 0L) {
+                Timber.tag(TAG).w("Observed file has size 0 file=%s", canonicalPath)
+                return@launch
+            }
+
+            val detectedAtEpochMillis =
+                file.lastModified().takeIf { it > 0L } ?: System.currentTimeMillis()
+            val detectedAt = DETECTED_AT_FORMATTER.format(
+                Instant.ofEpochMilli(detectedAtEpochMillis)
+            )
+
+            Timber.tag(TAG).i(
+                "Processing WhatsApp image source=%s file=%s size=%s lastModified=%s",
+                source,
+                canonicalPath,
+                file.length(),
+                detectedAtEpochMillis
+            )
+
+            imageProcessingCoordinator.processNewImage(
+                imageFile = file,
+                detectedAtEpochMillis = detectedAtEpochMillis,
+                detectedAt = detectedAt
             )
         }
-
-        return null
     }
 
-    private fun trimHandledUris() {
-        while (handledImageUris.size > MAX_HANDLED_URI_CACHE_SIZE) {
-            handledImageUris.remove(handledImageUris.first())
+    private fun markHandled(path: String): Boolean {
+        val added = handledPaths.add(path)
+        while (handledPaths.size > MAX_HANDLED_PATHS) {
+            handledPaths.remove(handledPaths.first())
         }
+        return added
     }
 
     private fun buildNotification(): Notification =
@@ -180,6 +216,7 @@ class WhatsappMonitorService : Service() {
     private fun createNotificationChannel() {
         val notificationManager =
             getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
             getString(R.string.monitoring_notification_channel_name),
@@ -192,9 +229,10 @@ class WhatsappMonitorService : Service() {
     }
 
     companion object {
+        private const val TAG = "PicAlertsMonitor"
         private const val NOTIFICATION_CHANNEL_ID = "whatsapp_monitoring"
         private const val NOTIFICATION_ID = 1001
-        private const val MAX_HANDLED_URI_CACHE_SIZE = 100
+        private const val MAX_HANDLED_PATHS = 200
 
         const val ACTION_START = "com.pabloku.picalertsapp.action.START_MONITORING"
         const val ACTION_STOP = "com.pabloku.picalertsapp.action.STOP_MONITORING"
@@ -209,17 +247,4 @@ class WhatsappMonitorService : Service() {
                 action = ACTION_STOP
             }
     }
-}
-
-private fun MediaImageRecord.formattedDetectedAt(): String =
-    DETECTED_AT_FORMATTER.format(Instant.ofEpochSecond(dateAddedEpochSeconds))
-
-private fun android.database.Cursor.getStringOrNull(columnName: String): String? {
-    val index = getColumnIndex(columnName)
-    return if (index >= 0 && !isNull(index)) getString(index) else null
-}
-
-private fun android.database.Cursor.getLongOrNull(columnName: String): Long? {
-    val index = getColumnIndex(columnName)
-    return if (index >= 0 && !isNull(index)) getLong(index) else null
 }

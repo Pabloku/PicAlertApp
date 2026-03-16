@@ -1,5 +1,12 @@
 package com.pabloku.picalertsapp.feature.history.presentation
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.ToggleOn
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -31,19 +39,25 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import com.pabloku.picalertsapp.R
 import com.pabloku.picalertsapp.feature.history.presentation.model.AlertHistoryItemUiModel
+import com.pabloku.picalertsapp.feature.monitoring.presentation.AllFilesAccessHelper
+import com.pabloku.picalertsapp.feature.monitoring.presentation.WhatsappMonitorService
 import com.pabloku.picalertsapp.ui.theme.PicAlertsAppTheme
 import com.pabloku.picalertsapp.ui.theme.PrimaryBlue
 import com.pabloku.picalertsapp.ui.theme.ScreenBackground
@@ -51,13 +65,57 @@ import com.pabloku.picalertsapp.ui.theme.SurfaceWhite
 import com.pabloku.picalertsapp.ui.theme.TextMuted
 import com.pabloku.picalertsapp.ui.theme.TextPrimary
 import com.pabloku.picalertsapp.ui.theme.TextSecondary
+import timber.log.Timber
 
 @Composable
 fun HistoryScreen(
     uiState: HistoryUiState,
     onClearHistoryClick: () -> Unit,
+    onChangeEmailClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val allFilesAccessLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        Timber.tag(TAG).i(
+            "Returned from all files access settings granted=%s",
+            AllFilesAccessHelper.isGranted()
+        )
+        if (AllFilesAccessHelper.isGranted()) {
+            startMonitoringService(context)
+        } else {
+            Timber.tag(TAG).w("All files access still not granted after settings return")
+        }
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        Timber.tag(TAG).i("Permission request results=%s", results)
+        if (results.values.all { it }) {
+            startMonitoringWithAllFilesAccess(context, allFilesAccessLauncher::launch)
+        } else {
+            Timber.tag(TAG).w("Monitoring permissions denied or partially granted")
+        }
+    }
+
+    LaunchedEffect(uiState.tutorEmail) {
+        if (uiState.tutorEmail.isBlank()) {
+            Timber.tag(TAG).d("Skipping monitoring start because tutor email is blank")
+            return@LaunchedEffect
+        }
+
+        val missingPermissions = requiredMonitoringPermissions()
+            .filterNot(context::hasPermission)
+        if (missingPermissions.isEmpty()) {
+            Timber.tag(TAG).i("All monitoring permissions already granted")
+            startMonitoringWithAllFilesAccess(context, allFilesAccessLauncher::launch)
+        } else {
+            Timber.tag(TAG).i("Requesting monitoring permissions=%s", missingPermissions)
+            permissionLauncher.launch(missingPermissions.toTypedArray())
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -77,7 +135,10 @@ fun HistoryScreen(
                 )
             }
             item {
-                MonitoringStatusCard()
+                MonitoringStatusCard(
+                    tutorEmail = uiState.tutorEmail,
+                    onChangeEmailClick = onChangeEmailClick
+                )
             }
             item {
                 Text(
@@ -147,66 +208,6 @@ private fun HistoryHeader(
             }
         } else {
             Spacer(modifier = Modifier.width(48.dp))
-        }
-    }
-}
-
-@Composable
-private fun MonitoringStatusCard() {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE7FBF4)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF15B77B)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.CheckCircle,
-                        contentDescription = null,
-                        tint = SurfaceWhite,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = stringResource(id = R.string.history_monitoring_active_title),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = Color(0xFF17825E),
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Text(
-                        text = stringResource(id = R.string.history_monitoring_active_body),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color(0xFF3D8A72),
-                            lineHeight = 18.sp
-                        )
-                    )
-                }
-            }
-            Icon(
-                imageVector = Icons.Filled.ToggleOn,
-                contentDescription = null,
-                tint = Color(0xFF13B67D),
-                modifier = Modifier.size(44.dp)
-            )
         }
     }
 }
@@ -360,6 +361,7 @@ private fun HistoryScreenPreview() {
     PicAlertsAppTheme {
         HistoryScreen(
             uiState = HistoryUiState(
+                tutorEmail = "guardian@example.com",
                 alerts = listOf(
                     AlertHistoryItemUiModel(
                         id = 1,
@@ -377,7 +379,136 @@ private fun HistoryScreenPreview() {
                     )
                 )
             ),
-            onClearHistoryClick = {}
+            onClearHistoryClick = {},
+            onChangeEmailClick = {}
         )
     }
 }
+
+@Composable
+private fun MonitoringStatusCard(
+    tutorEmail: String,
+    onChangeEmailClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE7FBF4)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF15B77B)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = null,
+                        tint = SurfaceWhite,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = stringResource(id = R.string.history_monitoring_active_title),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = Color(0xFF17825E),
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    Text(
+                        text = stringResource(id = R.string.history_monitoring_active_body),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color(0xFF3D8A72),
+                            lineHeight = 18.sp
+                        )
+                    )
+                    Text(
+                        text = stringResource(id = R.string.history_monitoring_email, tutorEmail),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color(0xFF2F7D66),
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+            }
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ToggleOn,
+                    contentDescription = null,
+                    tint = Color(0xFF13B67D),
+                    modifier = Modifier.size(44.dp)
+                )
+                TextButton(onClick = onChangeEmailClick) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(id = R.string.history_change_email_action),
+                        color = PrimaryBlue,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun requiredMonitoringPermissions(): List<String> = buildList {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        add(Manifest.permission.POST_NOTIFICATIONS)
+    } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        add(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+}
+
+private fun Context.hasPermission(permission: String): Boolean =
+    ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+
+private fun startMonitoringService(context: Context) {
+    runCatching {
+        Timber.tag(TAG).i("Starting WhatsappMonitorService after permission check")
+        ContextCompat.startForegroundService(
+            context,
+            WhatsappMonitorService.startIntent(context)
+        )
+    }.onFailure { throwable ->
+        Timber.tag(TAG).e(throwable, "Failed to start WhatsappMonitorService from history screen")
+    }
+}
+
+private fun startMonitoringWithAllFilesAccess(
+    context: Context,
+    launchAllFilesAccessSettings: (Intent) -> Unit
+) {
+    if (AllFilesAccessHelper.isGranted()) {
+        Timber.tag(TAG).i("All files access already granted")
+        startMonitoringService(context)
+        return
+    }
+
+    Timber.tag(TAG).w("All files access missing, launching settings flow")
+    launchAllFilesAccessSettings(AllFilesAccessHelper.createSettingsIntent(context))
+}
+
+private const val TAG = "PicAlertsMonitor"

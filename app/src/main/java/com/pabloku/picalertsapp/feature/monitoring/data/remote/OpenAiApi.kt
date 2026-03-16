@@ -23,7 +23,7 @@ data class OpenAiModerationRequest(
 
 @Serializable
 data class OpenAiModerationInput(
-    val type: String = "image_url",
+    val type: String,
     @SerialName("image_url") val imageUrl: OpenAiImageUrl
 )
 

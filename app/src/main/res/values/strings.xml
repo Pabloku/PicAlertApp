@@ -13,6 +13,8 @@
     <string name="history_clear_action">Clear history</string>
     <string name="history_monitoring_active_title">Monitoring is active</string>
     <string name="history_monitoring_active_body">Running in the background and protecting your chats.</string>
+    <string name="history_monitoring_email">Alert email: %1$s</string>
+    <string name="history_change_email_action">Change</string>
     <string name="history_recent_notifications">RECENT NOTIFICATIONS</string>
     <string name="history_empty_title">No alerts yet</string>
     <string name="history_empty_body">When Pics Alert detects risky WhatsApp media, the alert will appear here.</string>

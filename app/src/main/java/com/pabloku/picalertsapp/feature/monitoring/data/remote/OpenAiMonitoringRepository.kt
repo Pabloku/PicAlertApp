@@ -17,6 +17,7 @@ class OpenAiMonitoringRepository @Inject constructor(
                 request = OpenAiModerationRequest(
                     input = listOf(
                         OpenAiModerationInput(
+                            type = "image_url",
                             imageUrl = OpenAiImageUrl(url = encodedImageDataUrl)
                         )
                     )

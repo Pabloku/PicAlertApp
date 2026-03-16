@@ -6,27 +6,32 @@ import com.pabloku.picalertsapp.feature.history.data.AlertEntity
 import com.pabloku.picalertsapp.feature.history.domain.ClearHistoryUseCase
 import com.pabloku.picalertsapp.feature.history.domain.GetAlertHistoryUseCase
 import com.pabloku.picalertsapp.feature.history.presentation.model.AlertHistoryItemUiModel
+import com.pabloku.picalertsapp.feature.onboarding.domain.GetTutorEmailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     getAlertHistoryUseCase: GetAlertHistoryUseCase,
+    getTutorEmailUseCase: GetTutorEmailUseCase,
     private val clearHistoryUseCase: ClearHistoryUseCase
 ) : ViewModel() {
 
-    val uiState: StateFlow<HistoryUiState> = getAlertHistoryUseCase()
-        .map { alerts ->
+    val uiState: StateFlow<HistoryUiState> = combine(
+        getAlertHistoryUseCase(),
+        getTutorEmailUseCase()
+    ) { alerts, tutorEmail ->
             HistoryUiState(
+                tutorEmail = tutorEmail.orEmpty(),
                 alerts = alerts.map(::toUiModel)
             )
         }

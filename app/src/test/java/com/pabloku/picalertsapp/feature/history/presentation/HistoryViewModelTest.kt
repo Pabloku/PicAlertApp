@@ -3,6 +3,7 @@ package com.pabloku.picalertsapp.feature.history.presentation
 import com.pabloku.picalertsapp.feature.history.data.AlertEntity
 import com.pabloku.picalertsapp.feature.history.domain.ClearHistoryUseCase
 import com.pabloku.picalertsapp.feature.history.domain.GetAlertHistoryUseCase
+import com.pabloku.picalertsapp.feature.onboarding.domain.GetTutorEmailUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,6 +31,9 @@ class HistoryViewModelTest {
 
     @MockK
     lateinit var clearHistoryUseCase: ClearHistoryUseCase
+
+    @MockK
+    lateinit var getTutorEmailUseCase: GetTutorEmailUseCase
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -62,14 +66,17 @@ class HistoryViewModelTest {
                 )
             )
         )
+        every { getTutorEmailUseCase() } returns flowOf("guardian@example.com")
 
         val viewModel = HistoryViewModel(
             getAlertHistoryUseCase = getAlertHistoryUseCase,
+            getTutorEmailUseCase = getTutorEmailUseCase,
             clearHistoryUseCase = clearHistoryUseCase
         )
         advanceUntilIdle()
 
         assertEquals(2, viewModel.uiState.value.alerts.size)
+        assertEquals("guardian@example.com", viewModel.uiState.value.tutorEmail)
         assertEquals("VIOLENCE", viewModel.uiState.value.alerts.first().categoryLabel)
         assertEquals("ADULT CONTENT", viewModel.uiState.value.alerts[1].categoryLabel)
         assertFalse(viewModel.uiState.value.isEmpty)
@@ -78,9 +85,11 @@ class HistoryViewModelTest {
     @Test
     fun `Given alert history screen, when clear history is clicked then clear use case is invoked`() = runTest {
         every { getAlertHistoryUseCase() } returns flowOf(emptyList())
+        every { getTutorEmailUseCase() } returns flowOf("guardian@example.com")
         coEvery { clearHistoryUseCase() } returns Unit
         val viewModel = HistoryViewModel(
             getAlertHistoryUseCase = getAlertHistoryUseCase,
+            getTutorEmailUseCase = getTutorEmailUseCase,
             clearHistoryUseCase = clearHistoryUseCase
         )
         advanceUntilIdle()
