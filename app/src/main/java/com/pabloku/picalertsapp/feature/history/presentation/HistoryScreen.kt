@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,8 +32,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.ToggleOn
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -42,17 +44,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.pabloku.picalertsapp.R
 import com.pabloku.picalertsapp.feature.history.presentation.model.AlertHistoryItemUiModel
@@ -75,6 +81,7 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var showClearHistoryDialog by remember { mutableStateOf(false) }
     val allFilesAccessLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -122,6 +129,16 @@ fun HistoryScreen(
             .background(ScreenBackground)
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
+        if (showClearHistoryDialog) {
+            ClearHistoryConfirmationDialog(
+                onConfirm = {
+                    showClearHistoryDialog = false
+                    onClearHistoryClick()
+                },
+                onDismiss = { showClearHistoryDialog = false }
+            )
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -131,7 +148,7 @@ fun HistoryScreen(
             item {
                 HistoryHeader(
                     showClearAction = uiState.alerts.isNotEmpty(),
-                    onClearHistoryClick = onClearHistoryClick
+                    onClearHistoryClick = { showClearHistoryDialog = true }
                 )
             }
             item {
@@ -166,6 +183,32 @@ fun HistoryScreen(
             }
         }
     }
+}
+
+@Composable
+private fun ClearHistoryConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(id = R.string.history_clear_dialog_title))
+        },
+        text = {
+            Text(text = stringResource(id = R.string.history_clear_dialog_body))
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text(text = stringResource(id = R.string.history_clear_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(id = R.string.history_clear_dialog_cancel))
+            }
+        }
+    )
 }
 
 @Composable
@@ -252,7 +295,7 @@ private fun AlertHistoryCard(
                     text = alert.summary,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Normal,
                         lineHeight = 22.sp
                     ),
                     maxLines = 2
@@ -395,15 +438,14 @@ private fun MonitoringStatusCard(
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE7FBF4)),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -436,26 +478,35 @@ private fun MonitoringStatusCard(
                             lineHeight = 18.sp
                         )
                     )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
-                        text = stringResource(id = R.string.history_monitoring_email, tutorEmail),
-                        style = MaterialTheme.typography.bodySmall.copy(
+                        text = stringResource(id = R.string.history_monitoring_email_label),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Color(0xFF3D8A72),
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.6.sp
+                        )
+                    )
+                    Text(
+                        text = tutorEmail,
+                        style = MaterialTheme.typography.bodyMedium.copy(
                             color = Color(0xFF2F7D66),
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     )
                 }
-            }
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ToggleOn,
-                    contentDescription = null,
-                    tint = Color(0xFF13B67D),
-                    modifier = Modifier.size(44.dp)
-                )
-                TextButton(onClick = onChangeEmailClick) {
+                TextButton(onClick = onChangeEmailClick, border = BorderStroke(1.dp, PrimaryBlue)) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
                         contentDescription = null,

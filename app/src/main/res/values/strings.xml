@@ -11,9 +11,13 @@
     <string name="onboarding_disclaimer">By clicking above, you agree to our Terms and Privacy Policy regarding child safety.</string>
     <string name="history_screen_title">Alert History</string>
     <string name="history_clear_action">Clear history</string>
+    <string name="history_clear_dialog_title">Clear all alerts?</string>
+    <string name="history_clear_dialog_body">This will permanently remove all saved alert history from the app.</string>
+    <string name="history_clear_dialog_confirm">Clear alerts</string>
+    <string name="history_clear_dialog_cancel">Cancel</string>
     <string name="history_monitoring_active_title">Monitoring is active</string>
     <string name="history_monitoring_active_body">Running in the background and protecting your chats.</string>
-    <string name="history_monitoring_email">Alert email: %1$s</string>
+    <string name="history_monitoring_email_label">Alert email</string>
     <string name="history_change_email_action">Change</string>
     <string name="history_recent_notifications">RECENT NOTIFICATIONS</string>
     <string name="history_empty_title">No alerts yet</string>
